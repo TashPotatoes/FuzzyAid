@@ -3,6 +3,7 @@ import javax.swing.JFrame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -21,13 +22,36 @@ import javax.swing.JScrollPane;
 import java.awt.Dimension;
 
 import javax.swing.JTable;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+import net.ericaro.surfaceplotter.JSurfacePanel;
+import net.ericaro.surfaceplotter.surface.ArraySurfaceModel;
+
+import com.googlecode.surfaceplotter.SurfacePlotter;
+
 import Controller.Page;
+
+import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.util.Random;
 
 public class TemplateGui extends JFrame implements ActionListener {
 	/*String description;
@@ -41,9 +65,11 @@ public class TemplateGui extends JFrame implements ActionListener {
 	private int tableRowCount = 0;
 	private JTable table;
 	private DefaultTableModel model;
+	EmptyBorder noPadding = new EmptyBorder(5, 5, 5, 5);
 	
 	Page page;
 	private JPanel panel_1;
+	private JPanel panel_2;
 	
 	public TemplateGui(Page page){
 		this.page = page;
@@ -62,7 +88,7 @@ public class TemplateGui extends JFrame implements ActionListener {
 		this.visualData = visualData;
 */
 		JFrame frame = new JFrame();
-		frame.getContentPane().setLayout(new GridLayout(0, 1, 0, 0));
+		frame.getContentPane().setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
 		frame.setSize(600, 600);
 		frame.setVisible(true);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -70,20 +96,28 @@ public class TemplateGui extends JFrame implements ActionListener {
 		makeMenu(frame);
 
 		panel_1 = new JPanel();
-		panel_1.setMinimumSize(new Dimension(500, 100));
-		panel_1.setSize(new Dimension(584, 150));
 		frame.getContentPane().add(panel_1);
 		
 		makeTable(panel_1);
 
 		// bottom third
-		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		frame.getContentPane().add(tabbedPane);
-		makeVisualisation(tabbedPane);
-		makeDescription(tabbedPane);
+		panel_2 = new JPanel();
 		
+		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		tabbedPane.setBorder(noPadding);
+		//tabbedPane.setBackground(new Color(10,100,20));
+		frame.getContentPane().add(tabbedPane);
+		makeDescription(tabbedPane);
+		makeVisualisation(tabbedPane);
+		panel_2.setBorder(noPadding);
+		panel_2.setBackground(new Color(10,100,20));
+		panel_1.setSize(new Dimension(584, 180));
+		panel_2.setSize(new Dimension(584, 380));
+		
+		//panel_2.add(tabbedPane);
+		frame.getContentPane().add(panel_2);
+		frame.pack();
 
-		panel_1.setSize(new Dimension(584, 150));
 		
 		System.out.println("panel height " + panel_1.getHeight());
 		System.out.println("panel width " + panel_1.getWidth());
@@ -150,6 +184,15 @@ public class TemplateGui extends JFrame implements ActionListener {
 
 	
 	private void makeTable(JPanel panel) {
+		panel.setSize(new Dimension(584, 180));
+		panel.setLayout(new BorderLayout(0,0));
+		panel.setBackground(new Color(50, 100, 150));
+		
+		JPanel fakePanel = new JPanel();
+		fakePanel.setBorder(noPadding);
+		fakePanel.setSize(0, 0);
+		fakePanel.setVisible(false);
+		
 		table = new JTable(0, tableColCount);
 		model = (DefaultTableModel) table.getModel();
 		model.setColumnIdentifiers(page.getColNames());
@@ -159,16 +202,35 @@ public class TemplateGui extends JFrame implements ActionListener {
 				model.isCellEditable(i, j);
 			}
 		}
+		
 		System.out.println("-20 hsould be table height and is panel height "+ panel.getHeight());
-		Dimension tableDm = new Dimension(panel.getWidth() - 20, panel.getHeight() -20);
-		panel_1.setLayout(new BorderLayout(0, 0));
+		
+		
+		JScrollPane inputPane = new JScrollPane(table);
+		
+		Dimension tableDm = new Dimension(panel.getWidth() - 20, 118);//(int) Math.floor(panel.getHeight()*0.66));		
 		table.setPreferredScrollableViewportSize(new Dimension(tableDm));
 		table.setFillsViewportHeight(true); // set visible true
-		JScrollPane inputPane = new JScrollPane(table);
-		panel.add(inputPane);
-
+		
+		
+		JPanel buttonPanel = new JPanel();
+		FlowLayout buttonLayout = new FlowLayout();		
+		buttonPanel.setLayout(buttonLayout);
+		buttonPanel.setSize(new Dimension(panel.getWidth()-20, 30));
+		buttonLayout.setAlignment(FlowLayout.CENTER);
+		
+		//panel.add(fakePanel, BorderLayout.SOUTH);
+		panel.add(inputPane, BorderLayout.NORTH);
+		panel.add(buttonPanel, BorderLayout.CENTER);
+		
+		
+		buttonPanel.setBorder(noPadding);
+		inputPane.setBorder(noPadding);
+		fakePanel.setBorder(noPadding);
+		
+		
 		JButton buttonAdd = new JButton("More");
-		panel.add(buttonAdd);
+		buttonPanel.add(buttonAdd);
 		buttonAdd.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -179,7 +241,7 @@ public class TemplateGui extends JFrame implements ActionListener {
 		});
 
 		JButton buttonRemove = new JButton("Less");
-		panel.add(buttonRemove);
+		buttonPanel.add(buttonRemove);
 		buttonRemove.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -190,7 +252,7 @@ public class TemplateGui extends JFrame implements ActionListener {
 		});
 
 		JButton buttonUpdate = new JButton("Update");
-		panel.add(buttonUpdate);
+		buttonPanel.add(buttonUpdate);
 		buttonUpdate.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -205,8 +267,13 @@ public class TemplateGui extends JFrame implements ActionListener {
 				updateVisualtion();
 			}
 		});
-
+		buttonPanel.validate();
+		table.validate();
+		panel.validate();
 		
+		System.out.println("x pos of res more, less, update " + buttonUpdate.getX() + ", " + buttonUpdate.getX());
+		System.out.println((int) Math.floor(panel.getHeight()*0.66)+" hsould be table height but at the end "+ table.getHeight());
+
 	}
 
 	
@@ -214,6 +281,34 @@ public class TemplateGui extends JFrame implements ActionListener {
 	
 		JPanel visPanel = new JPanel();
 		tabbedPane.addTab("Visualisation", null, visPanel, null);
+
+		SurfacePlotter plot = new SurfacePlotter();
+		visPanel.add(plot);
+		/*JPanel chart = new ChartPanel(
+				createChart(createDataSeries(inputData)));
+		Plane plane = new Plane(cards, this);
+		
+        plane.setPlot(variablesCard.getData());
+        */
+		
+		JSurfacePanel jsp = new JSurfacePanel();
+		jsp.setTitleText("Making things happen");
+		visPanel.add(jsp);
+		
+		Random rand = new Random();
+		int max = 10;
+		float[][] z1 = new float[max][max];
+		float[][] z2 = new float[max][max];
+		for (int i = 0; i < max; i++) {
+			for (int j = 0; j < max; j++) {
+				z1[i][j] = rand.nextFloat() * 20 - 10f;
+				z2[i][j] = rand.nextFloat() * 20 - 10f;
+			}
+		}
+		ArraySurfaceModel sm = new ArraySurfaceModel();
+		sm.setValues(0f,10f,0f,10f,max, z1, z2);
+		jsp.setModel(sm);
+
 
 	}
 

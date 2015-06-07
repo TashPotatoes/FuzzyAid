@@ -2,7 +2,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.UIManager.LookAndFeelInfo;
 
-import Controller.Membership;
+import Controller.MembershipPage;
 import Controller.Page;
 
 
@@ -51,7 +51,7 @@ public class Runner {
 		Object[][] outData = {{0, 0.1, 0.44, 0.324, 0.5}, {0, 0.1, 0.44, 0.324, 0.5}};
 		String[] cols = {"something", "a", "b", "c", "d"};
 		
-		Page page = new Membership(descr, cols, inData, outData);
+		Page page = new MembershipPage(descr, cols, inData, outData);
 		
 		TemplateGui gui = new TemplateGui(page);
 		
