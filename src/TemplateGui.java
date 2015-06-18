@@ -38,12 +38,33 @@ import javax.swing.table.DefaultTableModel;
 
 
 
+
+
+
+
+
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
+
 import net.ericaro.surfaceplotter.JSurfacePanel;
 import net.ericaro.surfaceplotter.surface.ArraySurfaceModel;
+import Controller.Page;
 
 import com.googlecode.surfaceplotter.SurfacePlotter;
 
-import Controller.Page;
+import easyfuzzy.controller.BasicFuzzyController;
+import easyfuzzy.rules.modifier.FzSet;
+import easyfuzzy.variables.*;
+import easyfuzzy.variables.functions.*;
 
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -65,16 +86,20 @@ public class TemplateGui extends JFrame implements ActionListener {
 	private int tableRowCount = 0;
 	private JTable table;
 	private DefaultTableModel model;
+	XYSeriesCollection allFunctions;
 	EmptyBorder noPadding = new EmptyBorder(5, 5, 5, 5);
 	
+	BasicFuzzyController bfc;
 	Page page;
+	
 	private JPanel panel_1;
 	private JPanel panel_2;
 	
-	public TemplateGui(Page page){
+	public TemplateGui(Page page, BasicFuzzyController bfc){
 		this.page = page;
-		tableRowCount = page.getOutData().length;
-		tableColCount = page.getOutData()[0].length;
+		this.bfc = bfc;
+		tableRowCount = page.getInData().length;
+		tableColCount = page.getInData()[0].length;
 	//}
 	
 /*	public TemplateGui(String[] cols, Object[][] inputData, String description,
@@ -130,8 +155,6 @@ public class TemplateGui extends JFrame implements ActionListener {
 	}
 
 	private void updateVisualtion() {
-		page.sanityCheckData();
-		page.parseInData();
 		page.drawVisual();
 		// TODO method
 	
@@ -195,9 +218,10 @@ public class TemplateGui extends JFrame implements ActionListener {
 		
 		table = new JTable(0, tableColCount);
 		model = (DefaultTableModel) table.getModel();
+		
 		model.setColumnIdentifiers(page.getColNames());
 		for (int i = 0; i < tableRowCount; i++) {
-			model.addRow(page.getOutData()[i]);
+			model.addRow(page.getInData()[i]);
 			for (int j = 0; j < tableColCount; j++) {
 				model.isCellEditable(i, j);
 			}
@@ -256,15 +280,8 @@ public class TemplateGui extends JFrame implements ActionListener {
 		buttonUpdate.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
-				for (int row = 0; row < tableRowCount; row++){
-					for (int col = 0; col < tableColCount; col++){
-						//sanity check();
-						//page.setOutDataAt(row, col, model.getValueAt(row, col));						
-					}
-				}
-				
 				updateVisualtion();
+				page.runLogic(bfc);
 			}
 		});
 		buttonPanel.validate();
@@ -276,14 +293,25 @@ public class TemplateGui extends JFrame implements ActionListener {
 
 	}
 
+	public BasicFuzzyController updateBFC(BasicFuzzyController bfc){
+		return bfc;
+	}
 	
 	private void makeVisualisation(JTabbedPane tabbedPane) {
-	
 		JPanel visPanel = new JPanel();
 		tabbedPane.addTab("Visualisation", null, visPanel, null);
+		if (page.getShowSurface()){
+			makeSurface(visPanel);
+		} else {
+			makeChart(visPanel);
+		}
+		//((page.getShowSurface()) ? makeSurface(visPanel) : makeChart(visPanel));
+				
+	}
 
-		SurfacePlotter plot = new SurfacePlotter();
-		visPanel.add(plot);
+	private void makeSurface(JPanel panel){
+		//SurfacePlotter plot = new SurfacePlotter();
+		//visPanel.add(plot);
 		/*JPanel chart = new ChartPanel(
 				createChart(createDataSeries(inputData)));
 		Plane plane = new Plane(cards, this);
@@ -293,7 +321,7 @@ public class TemplateGui extends JFrame implements ActionListener {
 		
 		JSurfacePanel jsp = new JSurfacePanel();
 		jsp.setTitleText("Making things happen");
-		visPanel.add(jsp);
+		panel.add(jsp);
 		
 		Random rand = new Random();
 		int max = 10;
@@ -308,10 +336,46 @@ public class TemplateGui extends JFrame implements ActionListener {
 		ArraySurfaceModel sm = new ArraySurfaceModel();
 		sm.setValues(0f,10f,0f,10f,max, z1, z2);
 		jsp.setModel(sm);
-
-
 	}
+	
+	private void makeChart(JPanel panel){
+		page.calculateVisual();
+		JPanel chart = new ChartPanel(createChart(page.createDataSeries(page.getOutChartData())));
+		panel.add(chart);
+	}
+	//should this be elsewhere?
+	private JFreeChart createChart(final XYSeriesCollection dataset){
+		JFreeChart XYLineChart = ChartFactory.createXYLineChart(page.getVisualTitle(), page.getXTitle(), page.getYTitle(), dataset, PlotOrientation.VERTICAL, true, true, false);
+		
+		XYItemRenderer renderer = XYLineChart.getXYPlot().getRenderer();
+		renderer.setSeriesPaint(0, Color.black);
+		renderer.setSeriesPaint(1, Color.blue);
+		renderer.setSeriesPaint(2, Color.cyan);
+		renderer.setSeriesPaint(3, Color.gray);
+		renderer.setSeriesPaint(4, Color.darkGray);
+		renderer.setSeriesPaint(5, Color.yellow);
+		renderer.setSeriesPaint(6, Color.green);
+		renderer.setSeriesPaint(7, Color.red);
 
+		XYPlot plot = XYLineChart.getXYPlot();
+
+		ValueAxis domain = plot.getDomainAxis();
+		domain.setAutoRange(true);
+		ValueAxis range = plot.getRangeAxis();
+		range.resizeRange(0, 1);
+		
+		NumberAxis xAxis = (NumberAxis) XYLineChart.getXYPlot().getRangeAxis();
+		xAxis.setRange(0,1);
+		NumberAxis yAxis = (NumberAxis) XYLineChart.getXYPlot().getDomainAxis();
+		yAxis.setRange(0,1);
+		
+
+		XYLineChart.setBackgroundPaint(Color.lightGray);
+		XYLineChart.getLegend().setBackgroundPaint(Color.white);
+		return XYLineChart;
+		
+	}
+	
 	
 	private void makeDescription(JTabbedPane tabbedPane) {
 	
@@ -325,7 +389,15 @@ public class TemplateGui extends JFrame implements ActionListener {
 		descPanel.add(descriptionArea);
 	
 	}
-
+	
+	/*
+	fuzzy.work(now);
+	assignment.finished(friday)
+	marker.mood(amazed);
+	tash.mood(soops_happy);
+	lachlan.mood(soops_proud);
+	*/
+	
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {

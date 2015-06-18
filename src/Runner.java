@@ -2,6 +2,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.UIManager.LookAndFeelInfo;
 
+import easyfuzzy.controller.BasicFuzzyController;
 import Controller.MembershipPage;
 import Controller.Page;
 
@@ -44,16 +45,10 @@ public class Runner {
 		}
 		
 		
-		String descr = "blablabl this is a horrible description /n erterrtertert rt rggggggggggggggggggggggggggggs fg dgdgd dfd"
-				+ "alerkgelk seiuh erpiau eiu eioj  rtiowazskf ereths rryhtyj "
-				+ "gljdf ;  woeuth ethg srt  jwairojf aht hutgie tgsrtg hsr t " ;
-		Object[][] inData = {{0, 0.1, 0.44, 0.324, 0.5}, {0, 0.1, 0.44, 0.324, 0.5}};
-		Object[][] outData = {{0, 0.1, 0.44, 0.324, 0.5}, {0, 0.1, 0.44, 0.324, 0.5}};
-		String[] cols = {"something", "a", "b", "c", "d"};
+		BasicFuzzyController bfc = new BasicFuzzyController();
+		Page page = new MembershipPage();
 		
-		Page page = new MembershipPage(descr, cols, inData, outData);
-		
-		TemplateGui gui = new TemplateGui(page);
+		TemplateGui gui = new TemplateGui(page, bfc);
 		
 		//for parsing into the template GUI
 		/*TableColumn column = jTable1.getColumnModel().getColumn(3);

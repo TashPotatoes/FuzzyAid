@@ -1,5 +1,6 @@
+package Controller;
 
-public enum FuzzyVar { 
+public enum FuzzyType { 
 	TRIANGULAR(0,"Triangle"), SQUARE(1, "Square"), TRAPEZOIDAL(2, "Trapezoid");
 	
 //	private String[] Types = {"Trianlge", "Square", "Trapezoid"};
@@ -8,10 +9,11 @@ public enum FuzzyVar {
 	private int valueInt;
 	private String valueString;
 	
-	private FuzzyVar(int valueInt, String valueString) {
+	private FuzzyType(int valueInt, String valueString) {
         this.valueInt = valueInt;
         this.valueString = valueString;
 	}
+
 }
 
 
